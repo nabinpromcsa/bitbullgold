@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="BitBullGold is a local-first Solana market scanner and controlled trading desktop application for Windows.">
+  <meta name="theme-color" content="#0b1117">
+  <title>BitBullGold | Solana Trading Desktop</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2212%22 fill=%22%230b1117%22/><path d=%22M15 18h10l7 9 7-9h10l-6 15 6 13H39l-7-8-7 8H15l6-13z%22 fill=%22%23d6a84b%22/></svg>">
+  <style>
+:root {
+  --ink: #0b1117;
+  --ink-2: #111a23;
+  --paper: #f4f1e9;
+  --paper-2: #e8e3d8;
+  --gold: #d6a84b;
+  --gold-dark: #8f6724;
+  --line: rgba(11, 17, 23, 0.18);
+  --muted: #59616a;
+  --safe: #74c69d;
+  --radius: 3px;
+  --shell: min(1160px, calc(100% - 40px));
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+a { color: inherit; }
+
+.shell { width: var(--shell); margin-inline: auto; }
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -60px;
+  z-index: 100;
+  padding: 10px 14px;
+  color: white;
+  background: var(--ink);
+}
+.skip-link:focus { top: 12px; }
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.header-inner {
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 28px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  width: max-content;
+  font-size: 17px;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.brand-mark {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: inline-block;
+  border: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.brand-mark::before,
+.brand-mark::after,
+.brand-mark i {
+  content: "";
+  position: absolute;
+  background: var(--gold);
+}
+.brand-mark::before { width: 8px; height: 8px; left: 4px; top: 4px; }
+.brand-mark::after { width: 8px; height: 8px; right: 4px; bottom: 4px; }
+.brand-mark i { width: 2px; height: 18px; left: 12px; top: 4px; }
+
+nav { display: flex; align-items: center; gap: 28px; }
+nav a {
+  color: #37404a;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+nav a:hover { color: var(--gold-dark); }
+.header-inner > .button { justify-self: end; }
+
+.button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 0 20px;
+  color: var(--ink);
+  background: transparent;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, color 140ms ease;
+}
+.button:hover { transform: translateY(-2px); }
+.button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid rgba(214,168,75,.55); outline-offset: 3px; }
+.button-small { min-height: 40px; padding-inline: 16px; font-size: 14px; }
+.button-primary { color: #101419; border-color: var(--gold); background: var(--gold); }
+.button-primary:hover { background: #e1ba6d; }
+.button-outline:hover { color: var(--paper); background: var(--ink); }
+.button-light { border-color: var(--paper); background: var(--paper); }
+
+.hero {
+  padding: clamp(76px, 10vw, 140px) 0 clamp(80px, 10vw, 128px);
+  overflow: hidden;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr);
+  gap: clamp(48px, 9vw, 120px);
+  align-items: center;
+}
+
+.eyebrow {
+  margin: 0 0 16px;
+  color: var(--gold-dark);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+h1, h2, h3, p { margin-top: 0; }
+h1 {
+  max-width: 780px;
+  margin-bottom: 26px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(54px, 8vw, 104px);
+  font-weight: 500;
+  letter-spacing: -.065em;
+  line-height: .92;
+}
+h2 {
+  margin-bottom: 20px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 5vw, 66px);
+  font-weight: 500;
+  letter-spacing: -.045em;
+  line-height: 1;
+}
+h3 { margin-bottom: 9px; font-size: 19px; letter-spacing: -.02em; }
+
+.hero-lede {
+  max-width: 650px;
+  margin-bottom: 32px;
+  color: #343d45;
+  font-size: clamp(18px, 2vw, 22px);
+}
+.hero-actions { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.text-link { font-weight: 720; text-underline-offset: 5px; text-decoration-thickness: 1px; }
+.release-line { display: flex; align-items: center; gap: 9px; margin-top: 28px; color: var(--muted); font-size: 13px; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: #39795a; box-shadow: 0 0 0 4px rgba(57,121,90,.12); }
+
+.terminal-card {
+  position: relative;
+  padding: 28px;
+  color: #e7e9ea;
+  border: 1px solid #263442;
+  background: var(--ink);
+  box-shadow: 18px 18px 0 var(--gold);
+}
+.terminal-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .08;
+  background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px);
+  background-size: 100% 5px;
+}
+.terminal-top { display: flex; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid #263442; color: #8996a2; font: 700 11px/1.2 ui-monospace, monospace; letter-spacing: .09em; }
+.terminal-live { color: var(--gold); }
+.terminal-list { margin: 20px 0 14px; }
+.terminal-list div { display: flex; justify-content: space-between; gap: 20px; padding: 13px 0; border-bottom: 1px solid #202b35; }
+.terminal-list dt { color: #8996a2; }
+.terminal-list dd { margin: 0; font: 700 13px/1.6 ui-monospace, monospace; }
+.terminal-list .safe { color: var(--safe); }
+.terminal-note { margin: 18px 0 0; color: #8996a2; font: 12px/1.5 ui-monospace, monospace; }
+
+.metric-strip { border-block: 1px solid var(--line); background: var(--paper-2); }
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+.metric-grid > div { min-height: 125px; display: flex; flex-direction: column; justify-content: center; padding: 20px 28px; border-left: 1px solid var(--line); }
+.metric-grid > div:last-child { border-right: 1px solid var(--line); }
+.metric-grid strong { font-size: 15px; }
+.metric-grid span { color: var(--muted); font-size: 13px; }
+
+.section { padding: clamp(84px, 10vw, 140px) 0; }
+.section-heading { max-width: 760px; margin-bottom: 56px; }
+.section-heading > p:last-child { max-width: 620px; color: var(--muted); font-size: 18px; }
+
+.feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.feature-card { min-height: 290px; padding: 36px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.feature-card p { max-width: 490px; color: var(--muted); }
+.feature-index { display: block; margin-bottom: 70px; color: var(--gold-dark); font: 700 12px/1 ui-monospace, monospace; }
+.feature-wide { min-height: 330px; }
+
+.section-dark { color: var(--paper); background: var(--ink); }
+.controls-grid { display: grid; grid-template-columns: .85fr 1.15fr; gap: clamp(60px, 10vw, 140px); align-items: start; }
+.section-dark .eyebrow { color: var(--gold); }
+.section-dark .section-heading > p:last-child { color: #9aa5ae; }
+.sticky-heading { position: sticky; top: 120px; margin-bottom: 0; }
+.control-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid #263442; }
+.control-list li { display: grid; grid-template-columns: 50px 1fr; gap: 22px; padding: 30px 0; border-bottom: 1px solid #263442; }
+.control-list li > span { color: var(--gold); font: 700 12px/1.6 ui-monospace, monospace; }
+.control-list p { margin-bottom: 0; color: #9aa5ae; }
+
+.requirements-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(60px, 10vw, 150px); }
+.requirements-list { margin: 0; border-top: 1px solid var(--line); }
+.requirements-list div { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.requirements-list dt { color: var(--muted); }
+.requirements-list dd { margin: 0; font-weight: 720; }
+
+.download-section { padding: 0 0 80px; }
+.download-panel { display: flex; justify-content: space-between; align-items: end; gap: 40px; padding: clamp(40px, 7vw, 76px); color: var(--paper); background: #8b651f; }
+.download-panel h2 { margin-bottom: 14px; }
+.download-panel p:not(.eyebrow) { max-width: 650px; margin-bottom: 0; color: #f0e6d3; }
+.download-panel .eyebrow { color: #f5d994; }
+
+footer { padding: 36px 0; border-top: 1px solid var(--line); }
+.footer-grid { display: grid; grid-template-columns: 1fr 2fr auto; gap: 40px; align-items: center; }
+.footer-grid p { margin: 0; color: var(--muted); font-size: 12px; }
+.footer-brand { font-size: 15px; }
+.footer-brand .brand-mark { width: 24px; height: 24px; }
+.footer-brand .brand-mark::before, .footer-brand .brand-mark::after { width: 6px; height: 6px; }
+.footer-brand .brand-mark i { left: 9px; top: 3px; height: 14px; }
+
+.download-dialog {
+  width: min(680px, calc(100% - 28px));
+  max-height: calc(100vh - 28px);
+  overflow: auto;
+  padding: clamp(28px, 5vw, 48px);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: 0 30px 90px rgba(0,0,0,.3);
+}
+.download-dialog::backdrop { background: rgba(6, 10, 14, .76); backdrop-filter: blur(5px); }
+.download-dialog h2 { font-size: clamp(34px, 6vw, 52px); }
+.dialog-close { position: absolute; right: 16px; top: 12px; width: 42px; height: 42px; border: 0; color: var(--ink); background: transparent; font-size: 32px; cursor: pointer; }
+.dialog-intro { color: var(--muted); }
+.download-steps { margin-top: 30px; border-top: 1px solid var(--line); }
+.download-step { display: grid; grid-template-columns: 34px 1fr; gap: 16px; padding: 24px 0; border-bottom: 1px solid var(--line); }
+.download-step > span { color: var(--gold-dark); font: 700 12px/1.8 ui-monospace, monospace; }
+.download-step p { margin-bottom: 14px; color: var(--muted); font-size: 14px; }
+.confirm-row { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; }
+.confirm-row input { width: 19px; height: 19px; margin-top: 3px; accent-color: var(--gold-dark); }
+.is-disabled { pointer-events: none; opacity: .42; }
+.download-meta, .verification-note, .dialog-message { font-size: 12px !important; }
+.verification-note { margin: 22px 0 0; color: var(--muted); }
+.dialog-message { min-height: 20px; margin: 10px 0 0; color: #8a2d24; font-weight: 700; }
+
+@media (max-width: 820px) {
+  :root { --shell: min(100% - 28px, 680px); }
+  .header-inner { grid-template-columns: 1fr auto; }
+  nav { display: none; }
+  .hero-grid, .controls-grid, .requirements-grid { grid-template-columns: 1fr; }
+  .hero-grid { gap: 64px; }
+  .terminal-card { box-shadow: 10px 10px 0 var(--gold); }
+  .metric-grid { grid-template-columns: 1fr 1fr; }
+  .metric-grid > div:nth-child(2) { border-right: 1px solid var(--line); }
+  .metric-grid > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .feature-grid { grid-template-columns: 1fr; }
+  .feature-card, .feature-wide { min-height: 260px; }
+  .sticky-heading { position: static; }
+  .download-panel { align-items: flex-start; flex-direction: column; }
+  .footer-grid { grid-template-columns: 1fr; gap: 22px; }
+}
+
+@media (max-width: 520px) {
+  .site-header .brand span:last-child { display: none; }
+  h1 { font-size: 54px; }
+  .hero { padding-top: 68px; }
+  .hero-actions { align-items: stretch; flex-direction: column; }
+  .hero-actions .button { width: 100%; }
+  .metric-grid { grid-template-columns: 1fr; }
+  .metric-grid > div { min-height: 100px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .feature-card { padding: 28px; }
+  .feature-index { margin-bottom: 45px; }
+  .requirements-list div { grid-template-columns: 1fr; gap: 5px; }
+  .download-dialog { padding: 32px 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; }
+}
+
+  </style>
+  <script>
+window.BITBULLGOLD_CONFIG = {
+  xProfileUrl: "https://x.com/your_account",
+  downloadUrl: "https://github.com/solanatradingplatform/solana-trading-platform/releases/latest",
+  releaseVersion: "Current Windows release",
+  downloadLabel: "Download for Windows"
+};
+
+  </script>
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+(() => {
+  "use strict";
+
+  const config = window.BITBULLGOLD_CONFIG || {};
+  const dialog = document.getElementById("download-dialog");
+  const closeButton = document.getElementById("dialog-close");
+  const xFollowLink = document.getElementById("x-follow-link");
+  const confirmation = document.getElementById("follow-confirmation");
+  const downloadLink = document.getElementById("download-link");
+  const downloadMeta = document.getElementById("download-meta");
+  const message = document.getElementById("dialog-message");
+
+  const xProfileConfigured =
+    typeof config.xProfileUrl === "string" &&
+    /^https:\/\/(www\.)?(x\.com|twitter\.com)\//i.test(config.xProfileUrl) &&
+    !config.xProfileUrl.includes("your_account");
+
+  const downloadConfigured =
+    typeof config.downloadUrl === "string" &&
+    /^https:\/\//i.test(config.downloadUrl);
+
+  document.getElementById("year").textContent =
+    String(new Date().getFullYear());
+
+  if (config.releaseVersion) {
+    document.getElementById("release-label").textContent =
+      `${config.releaseVersion} · Windows 10/11 · x64`;
+    downloadMeta.textContent =
+      `${config.releaseVersion} · Windows 10/11 · x64`;
+  }
+
+  if (config.downloadLabel) {
+    downloadLink.textContent = config.downloadLabel;
+  }
+
+  document.querySelectorAll("[data-open-download]").forEach((button) => {
+    button.addEventListener("click", () => {
+      confirmation.checked = false;
+      confirmation.disabled = true;
+      downloadLink.classList.add("is-disabled");
+      downloadLink.setAttribute("aria-disabled", "true");
+      message.textContent = "";
+      dialog.showModal();
+    });
+  });
+
+  closeButton.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+
+  xFollowLink.addEventListener("click", (event) => {
+    if (!xProfileConfigured) {
+      event.preventDefault();
+      message.textContent = "The X account has not been connected yet.";
+      return;
+    }
+
+    xFollowLink.href = config.xProfileUrl;
+    message.textContent = "";
+    window.setTimeout(() => {
+      confirmation.disabled = false;
+      confirmation.focus();
+    }, 800);
+  });
+
+  confirmation.addEventListener("change", () => {
+    const unlocked = confirmation.checked && downloadConfigured;
+    downloadLink.classList.toggle("is-disabled", !unlocked);
+    downloadLink.setAttribute("aria-disabled", String(!unlocked));
+    downloadLink.href = unlocked ? config.downloadUrl : "#";
+    message.textContent = confirmation.checked && !downloadConfigured
+      ? "The Windows download URL has not been configured yet."
+      : "";
+  });
+
+  downloadLink.addEventListener("click", (event) => {
+    if (downloadLink.getAttribute("aria-disabled") === "true") {
+      event.preventDefault();
+    }
+  });
+})();
+
+});
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#top" aria-label="BitBullGold home">
+        <span class="brand-mark" aria-hidden="true"><i></i></span>
+        <span>BitBullGold</span>
+      </a>
+
+      <nav aria-label="Primary navigation">
+        <a href="#features">Features</a>
+        <a href="#controls">Controls</a>
+        <a href="#requirements">Requirements</a>
+      </nav>
+
+      <button class="button button-small button-outline" data-open-download>
+        Download
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="shell hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Local-first Solana desktop software</p>
+          <h1>Trade with rules.<br>Keep control.</h1>
+          <p class="hero-lede">
+            BitBullGold combines token discovery, momentum screening and risk-managed execution in one Windows desktop application.
+          </p>
+
+          <div class="hero-actions">
+            <button class="button button-primary" data-open-download>
+              Get BitBullGold for Windows
+            </button>
+            <a class="text-link" href="#controls">See the safety controls</a>
+          </div>
+
+          <div class="release-line" aria-label="Release details">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="release-label">Windows 10/11 · x64</span>
+          </div>
+        </div>
+
+        <div class="terminal-card" aria-label="BitBullGold status preview">
+          <div class="terminal-top">
+            <span>BITBULLGOLD / STATUS</span>
+            <span class="terminal-live">LOCAL</span>
+          </div>
+          <dl class="terminal-list">
+            <div><dt>Mode</dt><dd>DEMO</dd></div>
+            <div><dt>Strategy</dt><dd>STRICT_SAFETY</dd></div>
+            <div><dt>Execution</dt><dd class="safe">DISARMED</dd></div>
+            <div><dt>Wallet</dt><dd>LOCKED</dd></div>
+            <div><dt>API</dt><dd>127.0.0.1</dd></div>
+          </dl>
+          <p class="terminal-note">Safe defaults on first launch.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="metric-strip" aria-label="Product principles">
+      <div class="shell metric-grid">
+        <div><strong>Localhost only</strong><span>Dashboard and API</span></div>
+        <div><strong>Encrypted wallet</strong><span>User-controlled backup</span></div>
+        <div><strong>Explicit arming</strong><span>Live execution gate</span></div>
+        <div><strong>Multiple strategies</strong><span>One active at a time</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="shell">
+        <div class="section-heading">
+          <p class="eyebrow">Built for disciplined operation</p>
+          <h2>A trading workstation, not a black box.</h2>
+          <p>Every mode exposes its state. Every live action remains behind explicit controls.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card feature-wide">
+            <span class="feature-index">01</span>
+            <h3>Market discovery</h3>
+            <p>Track recent Solana candidates and evaluate liquidity, volume, transactions, price movement and buy-to-sell activity.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">02</span>
+            <h3>Selectable strategies</h3>
+            <p>Choose strict safety, broad momentum or rapid five-minute momentum. Switching modes clears pending confirmations and disarms execution.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">03</span>
+            <h3>Position protection</h3>
+            <p>Configure stop loss, take profit, trailing stop, daily loss limits, position limits and wallet reserve.</p>
+          </article>
+          <article class="feature-card feature-wide">
+            <span class="feature-index">04</span>
+            <h3>Wallet boundaries</h3>
+            <p>Create an encrypted local wallet, verify its backup, choose an unlock duration and keep Phantom separate as an optional read-only connection.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-dark" id="controls">
+      <div class="shell controls-grid">
+        <div class="section-heading sticky-heading">
+          <p class="eyebrow">Layered controls</p>
+          <h2>Live trading is never a single switch.</h2>
+          <p>BitBullGold starts in demo mode. Going live requires deliberate configuration, an unlocked verified wallet and a separate execution-arming step.</p>
+        </div>
+
+        <ol class="control-list">
+          <li><span>01</span><div><h3>Choose the runtime mode</h3><p>Demo mode blocks transaction signing and submission.</p></div></li>
+          <li><span>02</span><div><h3>Set risk boundaries</h3><p>Trade size, reserve, open positions, daily trades and daily loss are configurable.</p></div></li>
+          <li><span>03</span><div><h3>Verify and unlock the wallet</h3><p>Encrypted backup verification and timed wallet access are handled separately.</p></div></li>
+          <li><span>04</span><div><h3>Arm live execution</h3><p>Changing strategy or runtime mode disarms execution and resets pending confirmations.</p></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section" id="requirements">
+      <div class="shell requirements-grid">
+        <div>
+          <p class="eyebrow">Desktop requirements</p>
+          <h2>Designed for Windows.</h2>
+        </div>
+        <dl class="requirements-list">
+          <div><dt>Operating system</dt><dd>Windows 10 or Windows 11</dd></div>
+          <div><dt>Architecture</dt><dd>64-bit (x64)</dd></div>
+          <div><dt>Network</dt><dd>Reliable internet connection</dd></div>
+          <div><dt>Wallet</dt><dd>Created locally after installation</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="download-section">
+      <div class="shell download-panel">
+        <div>
+          <p class="eyebrow">Windows download</p>
+          <h2>Start with demo mode.</h2>
+          <p>Follow BitBullGold on X for release notes, then unlock the current installer.</p>
+        </div>
+        <button class="button button-primary button-light" data-open-download>
+          Follow and download
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell footer-grid">
+      <div class="brand footer-brand"><span class="brand-mark" aria-hidden="true"><i></i></span><span>BitBullGold</span></div>
+      <p>Trading digital assets involves substantial risk. Software controls cannot eliminate market, liquidity or execution risk.</p>
+      <p>© <span id="year"></span> BitBullGold</p>
+    </div>
+  </footer>
+
+  <dialog class="download-dialog" id="download-dialog" aria-labelledby="download-title">
+    <button class="dialog-close" id="dialog-close" aria-label="Close download dialog">×</button>
+    <p class="eyebrow">Download access</p>
+    <h2 id="download-title">Follow BitBullGold on X</h2>
+    <p class="dialog-intro">Release updates and important notices are posted on X. Complete the steps below to continue.</p>
+
+    <div class="download-steps">
+      <div class="download-step">
+        <span>1</span>
+        <div>
+          <h3>Open our X profile</h3>
+          <p>The profile opens in a new tab.</p>
+          <a class="button button-outline" id="x-follow-link" href="#" target="_blank" rel="noopener noreferrer">Open X and follow</a>
+        </div>
+      </div>
+
+      <div class="download-step">
+        <span>2</span>
+        <div>
+          <h3>Confirm</h3>
+          <label class="confirm-row">
+            <input type="checkbox" id="follow-confirmation" disabled>
+            <span>I followed the BitBullGold account on X.</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="download-step">
+        <span>3</span>
+        <div>
+          <h3>Download the installer</h3>
+          <a class="button button-primary is-disabled" id="download-link" href="#" aria-disabled="true">Download for Windows</a>
+          <p class="download-meta" id="download-meta">Windows 10/11 · x64</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="verification-note">Current gate uses user confirmation. Verified-follow enforcement requires X OAuth and API access, which can be connected later.</p>
+    <p class="dialog-message" id="dialog-message" role="status"></p>
+  </dialog>
+</body>
+</html>
